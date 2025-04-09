@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스도쿠 게임</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>스도쿠 게임</h1>
+        
+        <div id="start-screen" class="screen active">
+            <h2>난이도 선택</h2>
+            <div class="difficulty-buttons">
+                <button id="easy">쉬움</button>
+                <button id="medium">보통</button>
+                <button id="hard">어려움</button>
+                <button id="expert">어려움+</button>
+            </div>
+        </div>
+        
+        <div id="game-screen" class="screen">
+            <div class="game-header">
+                <button id="back-button">← 뒤로가기</button>
+                <div class="game-info">
+                    <div id="timer">00:00</div>
+                    <div id="mistakes">실수: 0</div>
+                    <div id="hints-used">사용한 힌트: 0</div>
+                </div>
+            </div>
+            
+            <div id="sudoku-board"></div>
+            
+            <div class="controls">
+                <div class="number-buttons"></div>
+                <div class="action-buttons">
+                    <button id="hint-button">힌트</button>
+                    <button id="memo-button">메모</button>
+                    <button id="delete-button">지우기</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="victory-screen" class="screen">
+            <h2>게임 클리어!</h2>
+            <div class="results">
+                <p id="final-time">총 시간: <span>00:00</span></p>
+                <p id="final-mistakes">틀린 횟수: <span>0</span></p>
+                <p id="final-hints">힌트 사용: <span>0</span></p>
+            </div>
+            <button id="play-again">다시 하기</button>
+        </div>
+    </div>
+    
+    <script src="sudoku-generator.js"></script>
+    <script src="sudoku-solver.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

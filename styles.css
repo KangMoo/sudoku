@@ -1,0 +1,282 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Arial', sans-serif;
+}
+
+body {
+  background-color: #f5f5f5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 500px;
+  width: 100%;
+  padding: 20px;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+h1 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.screen {
+  display: none;
+}
+
+.screen.active {
+  display: block;
+}
+
+.difficulty-buttons {
+  display: flex;
+  justify-content: space-around;
+  margin: 30px 0;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #45a049;
+}
+
+.game-info {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  font-weight: bold;
+}
+
+#sudoku-board {
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  grid-template-rows: repeat(9, 1fr);
+  gap: 0;
+  border: 2px solid #333;
+  max-width: 450px;
+  box-sizing: border-box;
+  background-color: #333; /* 배경을 격자 선 색상으로 설정 */
+}
+
+.sudoku-cell {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  background-color: #fff;
+  cursor: pointer;
+  position: relative;
+  user-select: none;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: none; /* 기존 border 제거 */
+  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.1);
+}
+
+.sudoku-cell.given {
+  font-weight: bold;
+  color: #333;
+}
+
+/* 선택된 셀 강조 효과 개선 */
+.sudoku-cell.selected {
+  background-color: #8393ef !important; /* 더 진한 파란색 배경 */
+  color: #fff !important; /* 글씨색을 흰색으로 변경 */
+  box-shadow: 0 0 8px rgba(63, 81, 181, 0.5), inset 0 0 0 2px #303f9f !important; /* 그림자 효과와 내부 테두리 */
+  z-index: 5; /* 다른 셀보다 앞에 표시 */
+  transform: scale(1.02); /* 약간 크기 확대 */
+  transition: all 0.2s ease; /* 부드러운 전환 효과 */
+}
+
+/* 선택된 셀이 정답인 경우의 글자 색상 유지 */
+.sudoku-cell.selected.wrong-number {
+  color: #ff0000 !important; /* 오답은 빨간색 유지 */
+}
+
+/* 관련 셀 강조 효과는 더 약하게 유지 */
+.sudoku-cell.related-row-col {
+  background-color: #e3f2fd;
+}
+
+.sudoku-cell.same-number {
+  background-color: #c8e6c9;
+}
+
+.sudoku-cell.invalid-position {
+  background-color: #e3f2fd;
+}
+
+.sudoku-cell.wrong-number {
+  color: #ff0000;
+  font-weight: bold;
+}
+
+.sudoku-cell.error-flash {
+  animation: flashRed 0.5s;
+}
+
+@keyframes flashRed {
+  0%, 100% { background-color: #bbdefb; }
+  50% { background-color: #ffcdd2; }
+}
+
+/* 3x3 블록 구분 */
+.sudoku-cell:nth-child(3n):not(:nth-child(9n)) {
+  border-right: 2px solid #333;
+}
+
+.sudoku-cell:nth-child(n+19):nth-child(-n+27),
+.sudoku-cell:nth-child(n+46):nth-child(-n+54) {
+  border-bottom: 2px solid #333;
+}
+
+.memo-container {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: calc(100% - 2px);
+  height: calc(100% - 2px);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  font-size: 10px;
+  color: #666;
+}
+
+.memo-number {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+}
+
+/* 메모 페이드아웃 애니메이션 */
+@keyframes memoFadeOut {
+  0% {
+      opacity: 1;
+      transform: scale(1);
+      background-color: #ffeb3b;
+  }
+  100% {
+      opacity: 0;
+      transform: scale(0);
+  }
+}
+
+.memo-number.fading-out {
+  animation: memoFadeOut 1.8s forwards;
+  z-index: 10;
+}
+
+.number-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 5px;
+  margin: 20px 0;
+}
+
+.number-button-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.number-button-container button {
+  width: 100%;
+  height: 100%;
+  padding: 10px 20px;
+  font-size: 16px;
+}
+
+.number-counter {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  font-size: 12px;
+  background-color: #f8f8f8;
+  color: #666;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.number-completed {
+  background-color: #8bc34a;
+  color: white;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+#memo-button.active {
+  background-color: #ff9800;
+}
+
+.results {
+  margin: 20px 0;
+  font-size: 18px;
+}
+
+#play-again {
+  margin-top: 20px;
+}
+
+/* 키보드 입력 시 버튼 클릭 효과 */
+.button-active {
+    transform: scale(0.95);
+    opacity: 0.8;
+    transition: transform 0.1s, opacity 0.1s;
+}
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+#back-button {
+  background-color: #607d8b;
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-right: 10px;
+  color: white;
+  border: none;
+}
+
+#back-button:hover {
+  background-color: #455a64;
+}
