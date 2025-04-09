@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
         hintButton: document.getElementById('hint-button'),
         deleteButton: document.getElementById('delete-button'),
         numberButtons: document.querySelector('.number-buttons'),
+        backButton: document.getElementById('back-button'),
         difficultyDisplay: document.getElementById('difficulty-display'),
         finalDifficulty: document.querySelector('#final-difficulty span'),
         finalTime: document.querySelector('#final-time span'),
@@ -406,8 +407,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // 숫자 입력 함수
     function inputNumber(num) {
         try {
-
-
             if (!selectedCell) {
                 // 선택된 셀이 없을 때, 해당 숫자에 대한 강조 효과만 적용
                 clearHighlights();
@@ -544,8 +543,17 @@ document.addEventListener('DOMContentLoaded', () => {
         isMemoMode = !isMemoMode;
         elements.memoButton.classList.toggle('active', isMemoMode);
 
-        // 메모 모드 전환 후에도 선택 상태와 강조 효과 유지
-        refreshHighlights();
+        if (isMemoMode) {
+            // 메모 모드 활성화 시 선택 상태와 강조 효과 유지
+            refreshHighlights();
+        } else {
+            // 메모 모드 비활성화 시 선택 상태와 강조 효과 제거
+            clearHighlights();
+            selectedCell = null;
+        }
+        
+        // URL 상태 업데이트
+        updateUrlWithGameState();    
     }
 
     // 메모에 숫자 추가/제거
@@ -863,17 +871,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 키보드 입력 처리 이벤트 리스너
     document.addEventListener('keydown', (event) => {
-        // 숫자키 1-9 감지 (키패드와 상단 숫자키 모두 지원)
-        const key = event.key;
-
         // 입력 필드나 다른 입력 요소에 포커스가 있을 때는 무시
         if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
             return;
         }
 
+        // 방향키 처리
+        if (event.key.startsWith('Arrow')) {
+            event.preventDefault(); // 페이지 스크롤 방지
+            moveSelectionWithArrowKey(event.key);
+            return;
+        }
+
         // 숫자키 1-9 처리
-        if (/^[1-9]$/.test(key)) {
-            const num = parseInt(key);
+        if (/^[1-9]$/.test(event.key)) {
+            const num = parseInt(event.key);
             inputNumber(num);
 
             // 대응하는 버튼에 시각적 클릭 효과
@@ -886,36 +898,36 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         // 기타 키 처리 (선택적 기능)
-        else if (key === 'Delete' || key === 'Backspace') {
+        else if (event.key === 'Delete' || event.key === 'Backspace') {
             // 지우기 버튼과 동일한 기능
             deleteNumber();
 
             // 지우기 버튼 시각적 클릭 효과
-            const deleteButton = document.getElementById('delete-button');
+            const deleteButton = elements.deleteButton;
             if (deleteButton) {
                 deleteButton.classList.add('button-active');
                 setTimeout(() => {
                     deleteButton.classList.remove('button-active');
                 }, 200);
             }
-        } else if (key === 'h' || key === 'H') {
+        } else if (event.key === 'h' || event.key === 'H') {
             // 힌트 버튼과 동일한 기능
             useHint();
 
             // 힌트 버튼 시각적 클릭 효과
-            const hintButton = document.getElementById('hint-button');
+            const hintButton = elements.hintButton;
             if (hintButton) {
                 hintButton.classList.add('button-active');
                 setTimeout(() => {
                     hintButton.classList.remove('button-active');
                 }, 200);
             }
-        } else if (key === 'm' || key === 'M') {
+        } else if (event.key === 'm' || event.key === 'M') {
             // 메모 버튼과 동일한 기능
             toggleMemoMode();
 
             // 메모 버튼 시각적 클릭 효과
-            const memoButton = document.getElementById('memo-button');
+            const memoButton = elements.memoButton;
             if (memoButton) {
                 memoButton.classList.add('button-active');
                 setTimeout(() => {
@@ -925,8 +937,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // 방향키로 선택된 셀 이동 함수
+    function moveSelectionWithArrowKey(arrowKey) {
+        // 선택된 셀이 없는 경우 기본 위치(0,0)에서 시작
+        if (!selectedCell) {
+            selectCell(0, 0);
+            return;
+        }
+
+        let { row, col } = selectedCell;
+        
+        switch (arrowKey) {
+            case 'ArrowUp':
+                row = Math.max(0, row - 1);
+                break;
+            case 'ArrowDown':
+                row = Math.min(8, row + 1);
+                break;
+            case 'ArrowLeft':
+                col = Math.max(0, col - 1);
+                break;
+            case 'ArrowRight':
+                col = Math.min(8, col + 1);
+                break;
+        }
+
+        // 이동한 위치가 현재 위치와 다른 경우에만 셀 선택
+        if (row !== selectedCell.row || col !== selectedCell.col) {
+            selectCell(row, col);
+        }
+    }
+
     // 뒤로가기 버튼 이벤트 리스너
-    document.getElementById('back-button').addEventListener('click', () => {
+    elements.backButton.addEventListener('click', () => {
         // 게임 진행 중 뒤로가기 버튼 클릭 시 확인 메시지
         if (confirm('게임을 종료하고 시작 화면으로 돌아가시겠습니까?')) {
             // 타이머 정지
