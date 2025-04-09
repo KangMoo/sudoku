@@ -58,10 +58,25 @@ button:hover {
 }
 
 .game-info {
+  width: 100%;
+  margin-bottom: 15px;
   display: flex;
-  justify-content: flex-end;
-  gap: 30px;
+  flex-direction: column;
+  gap: 10px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+.game-info-row {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#difficulty-display {
   font-weight: bold;
+  color: #2c3e50;
 }
 
 #sudoku-board {
@@ -97,11 +112,17 @@ button:hover {
 .sudoku-cell.given {
   font-weight: bold;
   color: #333;
+  background-color: #f0f0f0;
+}
+
+.sudoku-cell.user-input {
+  color: #0066cc;
+  font-weight: normal;
 }
 
 .sudoku-cell.selected {
-  background-color: #8393ef !important;
-  color: #fff !important;
+  background-color: #e3f2fd !important;
+  /* color: #fff !important; */
   box-shadow: 0 0 8px rgba(63, 81, 181, 0.5), inset 0 0 0 2px #303f9f !important;
   z-index: 5;
   transform: scale(1.02);
@@ -270,17 +291,25 @@ button:hover {
 }
 
 #back-button {
+  padding: 6px 12px;
   background-color: #607d8b;
-  padding: 8px 12px;
-  font-size: 14px;
+  border: 1px solid #ccc;
   border-radius: 4px;
   cursor: pointer;
+  font-size: 14px;
   transition: background-color 0.2s;
-  margin-right: 10px;
-  color: white;
-  border: none;
 }
 
 #back-button:hover {
-  background-color: #455a64;
+  background-color: #e0e0e0;
+}
+
+.sudoku-board td.given {
+  font-weight: bold;
+  color: #000;
+  background-color: #f0f0f0;
+}
+
+.sudoku-board td.user-input {
+  color: #0066cc;
 }

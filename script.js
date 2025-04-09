@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const sudokuGenerator = new SudokuGenerator();
     const sudokuSolver = new SudokuSolver();
+    const shareManager = new ShareManager();
 
     let sudoku = null;          // 현재 스도쿠 게임 상태
     let selectedCell = null;    // 현재 선택된 셀
@@ -10,6 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let mistakeCount = 0;       // 실수 횟수
     let hintsUsed = 0;          // 힌트 사용 횟수
     let memos = {};             // 메모 상태 관리
+    let currentDifficulty = null; // 현재 난이도
+    let originalPuzzle = null;  // 초기 주어진 스도쿠 상태
 
     const screens = {
         start: document.getElementById('start-screen'),
@@ -26,10 +29,28 @@ document.addEventListener('DOMContentLoaded', () => {
         hintButton: document.getElementById('hint-button'),
         deleteButton: document.getElementById('delete-button'),
         numberButtons: document.querySelector('.number-buttons'),
+        difficultyDisplay: document.getElementById('difficulty-display'),
+        finalDifficulty: document.querySelector('#final-difficulty span'),
         finalTime: document.querySelector('#final-time span'),
         finalMistakes: document.querySelector('#final-mistakes span'),
         finalHints: document.querySelector('#final-hints span')
     };
+
+    // 난이도 문자열 매핑
+    const difficultyNames = {
+        'easy': '쉬움',
+        'medium': '보통',
+        'hard': '어려움',
+        'expert': '어려움+'
+    };
+
+    function updateDifficultyDisplay() {
+        if (!currentDifficulty) return;
+
+        const displayName = difficultyNames[currentDifficulty] || currentDifficulty;
+        elements.difficultyDisplay.textContent = `난이도: ${displayName}`;
+    }
+
 
     // 난이도 선택 버튼 이벤트 리스너
     document.getElementById('easy').addEventListener('click', () => startGame('easy'));
@@ -42,25 +63,25 @@ document.addEventListener('DOMContentLoaded', () => {
         showScreen('start');
     });
 
-    // 힌트 버튼 이벤트 리스너 - 이벤트 전파 방지 추가
+    // 힌트 버튼 이벤트 리스너
     elements.hintButton.addEventListener('click', (event) => {
         event.stopPropagation();
         useHint();
     });
 
-    // 메모 버튼 이벤트 리스너 - 이벤트 전파 방지 추가
+    // 메모 버튼 이벤트 리스너
     elements.memoButton.addEventListener('click', (event) => {
         event.stopPropagation();
         toggleMemoMode();
     });
 
-    // 삭제 버튼 이벤트 리스너 - 이벤트 전파 방지 추가
+    // 삭제 버튼 이벤트 리스너
     elements.deleteButton.addEventListener('click', (event) => {
         event.stopPropagation();
         deleteNumber();
     });
 
-    // 숫자 버튼 생성 - 이벤트 전파 방지 추가
+    // 숫자 버튼 생성
     for (let i = 1; i <= 9; i++) {
         const buttonContainer = document.createElement('div');
         buttonContainer.classList.add('number-button-container');
@@ -83,10 +104,101 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.numberButtons.appendChild(buttonContainer);
     }
 
+    // 현재 상태를 URL에 업데이트하는 함수
+    function updateUrlWithGameState(isVictory = false) {
+        if (!sudoku) return;
+
+        const gameState = {
+            puzzle: sudoku.puzzle,
+            solution: sudoku.solution,
+            originalPuzzle: originalPuzzle, // 초기 퍼즐 상태
+            isMemoMode: isMemoMode,
+            seconds: seconds,
+            mistakeCount: mistakeCount,
+            hintsUsed: hintsUsed,
+            memos: memos,
+            difficulty: currentDifficulty,
+            isVictory: isVictory  // 승리 상태 포함
+        };
+
+        shareManager.saveStateToUrl(gameState);
+    }
+
+    // URL에서 게임 상태를 로드하는 함수
+    function loadGameStateFromUrl() {
+        const gameState = shareManager.getStateFromUrl();
+        if (gameState) {
+            // URL에 저장된 게임 상태가 있으면 복원
+            restoreGameState(gameState);
+            return true;
+        }
+        return false;
+    }
+
+    // 게임 상태를 복원하는 함수
+    function restoreGameState(gameState) {
+        // 게임 상태에서 필요한 정보 추출
+        sudoku = {
+            puzzle: gameState.puzzle,
+            solution: gameState.solution
+        };
+
+        // 초기 퍼즐 상태 복원
+        originalPuzzle = gameState.originalPuzzle || gameState.puzzle.map(row => row.map(cell => cell !== 0 ? cell : 0));
+
+        isMemoMode = gameState.isMemoMode;
+        seconds = gameState.seconds;
+        mistakeCount = gameState.mistakeCount;
+        hintsUsed = gameState.hintsUsed;
+        memos = gameState.memos || {};
+        currentDifficulty = gameState.difficulty;
+
+        // UI 업데이트
+        elements.memoButton.classList.toggle('active', isMemoMode);
+        elements.mistakes.textContent = `실수: ${mistakeCount}`;
+        elements.hintsUsed.textContent = `사용한 힌트: ${hintsUsed}`;
+
+        // 타이머 관련 로직
+        if (timer) clearInterval(timer);
+        updateTimer(true); // 타이머 표시만 업데이트
+
+        // 승리 상태인 경우 결과 화면 표시
+        if (gameState.isVictory) {
+            // 결과 표시
+            const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const secs = (seconds % 60).toString().padStart(2, '0');
+            elements.finalTime.textContent = `${mins}:${secs}`;
+            elements.finalMistakes.textContent = mistakeCount;
+            elements.finalHints.textContent = hintsUsed;
+
+            // 승리 화면 표시
+            showScreen('victory');
+        } else {
+            // 아니라면 일반적인 게임 복원 로직 진행
+            timer = setInterval(updateTimer, 1000);
+
+            // 보드 그리기
+            drawBoard();
+
+            // 메모 및 숫자 카운터 업데이트
+            updateMemos();
+            updateNumberCounters();
+
+            // 난이도 표시 업데이트
+            updateDifficultyDisplay();
+
+            // 게임 화면 전환
+            showScreen('game');
+        }
+    }
+
     // 게임 시작 함수
     function startGame(difficulty) {
         // 새 스도쿠 생성
         sudoku = sudokuGenerator.generateSudoku(difficulty);
+
+        // 초기 퍼즐 상태 저장
+        originalPuzzle = sudoku.puzzle.map(row => [...row]);
 
         // 상태 초기화
         selectedCell = null;
@@ -95,6 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
         mistakeCount = 0;
         hintsUsed = 0;
         memos = {};
+        currentDifficulty = difficulty;
 
         // UI 초기화
         elements.memoButton.classList.remove('active');
@@ -112,8 +225,14 @@ document.addEventListener('DOMContentLoaded', () => {
         // 초기 숫자 카운터 업데이트
         updateNumberCounters();
 
+        // 난이도 표시 업데이트
+        updateDifficultyDisplay();
+
         // 게임 화면 표시
         showScreen('game');
+
+        // 게임 상태를 URL에 저장
+        updateUrlWithGameState();
     }
 
     // 화면 전환 함수
@@ -128,6 +247,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
         const secs = (seconds % 60).toString().padStart(2, '0');
         elements.timer.textContent = `${mins}:${secs}`;
+
+        // 10초마다 URL 업데이트 ()
+        if (seconds % 10 === 0) {
+            updateUrlWithGameState();
+        }
     }
 
     // 보드 그리기 함수
@@ -142,11 +266,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 cell.dataset.col = col;
 
                 const value = sudoku.puzzle[row][col];
+
                 if (value !== 0) {
                     cell.textContent = value;
-                    cell.classList.add('given');
+
+                    // 초기 퍼즐 값인지 사용자 입력인지 구분
+                    if (originalPuzzle[row][col] !== 0) {
+                        cell.classList.add('given'); // 초기 주어진 숫자
+                    } else {
+                        cell.classList.add('user-input'); // 사용자가 입력한 숫자
+
+                        // 오답인 경우
+                        if (value !== sudoku.solution[row][col]) {
+                            cell.classList.add('wrong-number');
+                        }
+                    }
                 } else {
-                    // 메모 컨테이너 추가
+                    // 메모 컨테이너
                     const memoContainer = document.createElement('div');
                     memoContainer.classList.add('memo-container');
 
@@ -269,121 +405,127 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 숫자 입력 함수
     function inputNumber(num) {
-        if (!selectedCell) {
-            // 선택된 셀이 없을 때, 해당 숫자에 대한 강조 효과만 적용
-            clearHighlights();
-            highlightNumberWithoutSelection(num);
-            return;
-        }
+        try {
 
-        const { row, col } = selectedCell;
-        const cell = getCellElement(row, col);
 
-        // 선택된 셀이 초기값이거나 이미 정답이 입력된 경우
-        if (cell && cell.classList.contains('given')) {
-            clearHighlights();
-            highlightNumberWithoutSelection(num);
-            return;
-        }
-
-        // 현재 셀에 이미 정답이 입력된 경우, 오답으로 덮어쓰기 방지
-        const currentValue = sudoku.puzzle[row][col];
-        if (currentValue !== 0 && currentValue === sudoku.solution[row][col]) {
-            // 이미 정답이 입력된 경우, 해당 숫자에 대한 강조 효과만 적용 
-            clearHighlights();
-            highlightNumberWithoutSelection(num);
-            return;
-        }
-
-        if (isMemoMode) {
-            // 메모 모드로 숫자 기록
-            toggleMemoNumber(row, col, num);
-            updateMemos();
-
-            // 메모 입력 후에도 셀 선택 상태를 유지
-            // selectCell 대신 강조 효과만 다시 적용
-            clearHighlights();
-            highlightCell(row, col);
-            const value = getValue(row, col);
-            if (value !== 0) {
-                highlightSameNumber(value);
+            if (!selectedCell) {
+                // 선택된 셀이 없을 때, 해당 숫자에 대한 강조 효과만 적용
+                clearHighlights();
+                highlightNumberWithoutSelection(num);
+                return;
             }
-            // 선택 상태 명시적으로 유지
-            selectedCell = { row, col };
-        } else {
-            // 기존에 오답 클래스가 있으면 제거
-            cell.classList.remove('wrong-number');
 
-            // 정답 확인
-            if (sudoku.solution[row][col] === num) {
-                sudoku.puzzle[row][col] = num;
-                cell.textContent = num;
+            const { row, col } = selectedCell;
+            const cell = getCellElement(row, col);
 
-                // 정답이 입력된 셀의 메모 모두 삭제
-                const key = `${row},${col}`;
-                if (memos[key]) {
-                    delete memos[key];
-                }
+            // 선택된 셀이 초기값이거나 이미 정답이 입력된 경우
+            if (cell && cell.classList.contains('given')) {
+                clearHighlights();
+                highlightNumberWithoutSelection(num);
+                return;
+            }
 
-                // 관련 셀들의 메모에서 입력된 숫자만 제거
-                removeRelatedMemos(row, col, num);
+            // 현재 셀에 이미 정답이 입력된 경우, 오답으로 덮어쓰기 방지
+            const currentValue = sudoku.puzzle[row][col];
+            if (currentValue !== 0 && currentValue === sudoku.solution[row][col]) {
+                // 이미 정답이 입력된 경우, 해당 숫자에 대한 강조 효과만 적용 
+                clearHighlights();
+                highlightNumberWithoutSelection(num);
+                return;
+            }
 
-                // 숫자 카운터 업데이트
-                updateNumberCounters();
+            if (isMemoMode) {
+                // 메모 모드로 숫자 기록
+                toggleMemoNumber(row, col, num);
+                updateMemos();
 
-                // 게임 클리어 확인
-                if (isGameComplete()) {
-                    gameComplete();
-                    return; // 게임 클리어 시 셀 선택 로직 실행하지 않음
-                }
-
-                // 정답 입력 후에도 셀 선택 상태 유지 (누락된 부분 추가)
-                clearHighlights(); // 기존 강조 효과 제거 후 다시 적용
+                // 메모 입력 후에도 셀 선택 상태를 유지
+                // selectCell 대신 강조 효과만 다시 적용
+                clearHighlights();
                 highlightCell(row, col);
-                highlightSameNumber(num);
-
-                // 선택 상태 유지
+                const value = getValue(row, col);
+                if (value !== 0) {
+                    highlightSameNumber(value);
+                }
+                // 선택 상태 명시적으로 유지
                 selectedCell = { row, col };
             } else {
-                // 오답 처리 - 빨간 글씨로 입력하기
-                mistakeCount++;
-                elements.mistakes.textContent = `실수: ${mistakeCount}`;
+                // 기존에 오답 클래스가 있으면 제거
+                cell.classList.remove('wrong-number');
 
-                // 오답 효과 및 입력
-                cell.classList.add('error-flash');
-                setTimeout(() => {
-                    cell.classList.remove('error-flash');
-                }, 500);
+                // 정답 확인
+                if (sudoku.solution[row][col] === num) {
+                    sudoku.puzzle[row][col] = num;
+                    cell.textContent = num;
+                    cell.classList.add('user-input'); // 사용자가 입력한 숫자
+                    // 정답이 입력된 셀의 메모 모두 삭제
+                    const key = `${row},${col}`;
+                    if (memos[key]) {
+                        delete memos[key];
+                    }
 
-                // 오답을 셀에 표시하고 wrong-number 클래스 추가
-                sudoku.puzzle[row][col] = num;
-                cell.textContent = num;
-                cell.classList.add('wrong-number');
+                    // 관련 셀들의 메모에서 입력된 숫자만 제거
+                    removeRelatedMemos(row, col, num);
 
-                // 메모 컨테이너 제거 (오답 입력 시)
-                const memoContainer = cell.querySelector('.memo-container');
-                if (memoContainer) {
-                    memoContainer.remove();
+                    // 숫자 카운터 업데이트
+                    updateNumberCounters();
+
+                    // 게임 클리어 확인
+                    if (isGameComplete()) {
+                        gameComplete();
+                        return; // 게임 클리어 시 셀 선택 로직 실행하지 않음
+                    }
+
+                    // 정답 입력 후에도 셀 선택 상태 유지
+                    clearHighlights(); // 기존 강조 효과 제거 후 다시 적용
+                    highlightCell(row, col);
+                    highlightSameNumber(num);
+
+                    // 선택 상태 유지
+                    selectedCell = { row, col };
+                } else {
+                    // 오답 처리
+                    mistakeCount++;
+                    elements.mistakes.textContent = `실수: ${mistakeCount}`;
+
+                    // 오답 효과 및 입력
+                    cell.classList.add('error-flash');
+                    setTimeout(() => {
+                        cell.classList.remove('error-flash');
+                    }, 500);
+
+                    // 오답을 셀에 표시하고 wrong-number 클래스 추가
+                    sudoku.puzzle[row][col] = num;
+                    cell.textContent = num;
+                    cell.classList.add('wrong-number');
+
+                    // 메모 컨테이너 제거 (오답 입력 시)
+                    const memoContainer = cell.querySelector('.memo-container');
+                    if (memoContainer) {
+                        memoContainer.remove();
+                    }
+
+                    // 정답이 입력된 셀의 메모 모두 삭제
+                    const key = `${row},${col}`;
+                    if (memos[key]) {
+                        delete memos[key];
+                    }
+
+                    // 숫자 카운터 업데이트
+                    updateNumberCounters();
+
+                    // 오답 입력 후에도 셀 선택 상태 유지
+                    clearHighlights(); // 기존 강조 효과 제거 후 다시 적용
+                    highlightCell(row, col);
+                    selectedCell = { row, col };
                 }
-
-                // 정답이 입력된 셀의 메모 모두 삭제
-                const key = `${row},${col}`;
-                if (memos[key]) {
-                    delete memos[key];
-                }
-
-                // 숫자 카운터 업데이트
-                updateNumberCounters();
-
-                // 오답 입력 후에도 셀 선택 상태 유지
-                clearHighlights(); // 기존 강조 효과 제거 후 다시 적용
-                highlightCell(row, col);
-                selectedCell = { row, col };
             }
+        } finally {
+            updateUrlWithGameState();
         }
     }
 
-    // 강조 효과만 다시 적용하는 헬퍼 함수 추가
+    // 강조 효과만 다시 적용하는 헬퍼 함수
     function refreshHighlights() {
         if (!selectedCell) return;
 
@@ -601,6 +743,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clearHighlights();
         highlightCell(row, col);
         selectedCell = { row, col };
+        updateUrlWithGameState();
     }
 
     // 숫자 카운터 업데이트 함수
@@ -668,8 +811,25 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.finalMistakes.textContent = mistakeCount;
         elements.finalHints.textContent = hintsUsed;
 
+        // 승리 상태로 URL 업데이트
+        updateUrlWithGameState(true);
+
         // 승리 화면 표시
         showScreen('victory');
+
+        // 게임 상태 초기화
+        sudoku = null;
+        selectedCell = null;
+        isMemoMode = false;
+        seconds = 0;
+        mistakeCount = 0;
+        hintsUsed = 0;
+        memos = {};
+        originalPuzzle = null;
+        currentDifficulty = null;
+
+        // URL에서 게임 상태 제거 (해시 제거)
+        window.history.replaceState(null, null, window.location.pathname);
     }
 
     // 선택된 셀이 없을 때 숫자 버튼 클릭 시 강조 효과를 적용하는 함수
@@ -768,8 +928,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 timer = null;
             }
 
+            // 게임 상태 초기화
+            sudoku = null;
+            selectedCell = null;
+            isMemoMode = false;
+            seconds = 0;
+            mistakeCount = 0;
+            hintsUsed = 0;
+            memos = {};
+            originalPuzzle = null;
+            currentDifficulty = null;
+
+            // URL에서 게임 상태 제거 (해시 제거)
+            window.history.replaceState(null, null, window.location.pathname);
+
             // 시작 화면으로 이동
             showScreen('start');
         }
     });
+
+    // 페이지 로드 시 URL에서 게임 상태 확인 및 복원
+    if (!loadGameStateFromUrl()) {
+        // URL에 상태가 없으면 시작 화면 표시
+        showScreen('start');
+    }
 });
