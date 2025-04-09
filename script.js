@@ -653,6 +653,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 관련 셀들의 메모에서 입력된 숫자 제거
         removeRelatedMemos(row, col, correctNumber);
+        
+        // 숫자 카운터 업데이트
+        updateNumberCounters();
 
         // 게임 클리어 확인
         if (isGameComplete()) {
@@ -666,6 +669,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 선택 상태 명시적으로 유지
         selectedCell = { row, col };
+        
+        // URL 상태 업데이트
+        updateUrlWithGameState();
     }
 
     // 숫자 삭제 함수
@@ -807,6 +813,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 결과 표시
         const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
         const secs = (seconds % 60).toString().padStart(2, '0');
+        elements.finalDifficulty.textContent = difficultyNames[currentDifficulty] || currentDifficulty;
         elements.finalTime.textContent = `${mins}:${secs}`;
         elements.finalMistakes.textContent = mistakeCount;
         elements.finalHints.textContent = hintsUsed;
