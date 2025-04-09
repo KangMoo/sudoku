@@ -582,6 +582,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const memoElements = memoContainer.querySelectorAll('.memo-number');
             memoElements.forEach(elem => {
                 elem.textContent = '';
+                elem.classList.remove('fading-out');
             });
 
             // 저장된 메모 표시
@@ -604,7 +605,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const cellElement = getCellElement(cell.row, cell.col);
                 const memoContainer = cellElement?.querySelector('.memo-container');
                 const memoElem = memoContainer?.querySelector(`[data-number="${num}"]`);
-
                 if (memoElem && memoElem.textContent) {
                     // 시각적 효과 적용
                     memoElem.classList.add('fading-out');
