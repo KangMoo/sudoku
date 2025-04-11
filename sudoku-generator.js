@@ -5,15 +5,15 @@ class SudokuGenerator {
         this.BOX_SIZE = 3;
     }
 
-    // 스도쿠 보드 생성
+    // Generate Sudoku board
     generateSudoku(difficulty) {
-        // 빈 보드 생성
+        // Create an empty board
         const board = Array(this.SIZE).fill().map(() => Array(this.SIZE).fill(this.EMPTY));
 
-        // 완성된 스도쿠 해결책 생성
+        // Generate a complete Sudoku solution
         this.solveSudoku(board);
 
-        // 난이도에 따라 셀 제거
+        // Remove cells according to difficulty
         this.removeNumbers(board, difficulty);
 
         return {
@@ -22,16 +22,16 @@ class SudokuGenerator {
         };
     }
 
-    // 스도쿠 보드 복사
+    // Copy Sudoku board
     copyBoard(board) {
         return board.map(row => [...row]);
     }
 
-    // 백트래킹을 사용한 스도쿠 풀이
+    // Solve Sudoku using backtracking
     solveSudoku(board) {
         const emptyCell = this.findEmptyCell(board);
 
-        if (!emptyCell) return true; // 다 채워진 경우
+        if (!emptyCell) return true; // All cells filled
 
         const [row, col] = emptyCell;
         const nums = this.shuffleArray([1, 2, 3, 4, 5, 6, 7, 8, 9]);
@@ -44,14 +44,14 @@ class SudokuGenerator {
                     return true;
                 }
 
-                board[row][col] = this.EMPTY; // 실패 시 다시 비우기
+                board[row][col] = this.EMPTY; // Reset if failed
             }
         }
 
-        return false; // 해결책 없음
+        return false; // No solution
     }
 
-    // 빈 셀 찾기
+    // Find an empty cell
     findEmptyCell(board) {
         for (let row = 0; row < this.SIZE; row++) {
             for (let col = 0; col < this.SIZE; col++) {
@@ -60,22 +60,22 @@ class SudokuGenerator {
                 }
             }
         }
-        return null; // 빈 셀 없음
+        return null; // No empty cell
     }
 
-    // 숫자 유효성 확인
+    // Check if number is valid
     isValid(board, row, col, num) {
-        // 행 확인
+        // Check row
         for (let i = 0; i < this.SIZE; i++) {
             if (board[row][i] === num) return false;
         }
 
-        // 열 확인
+        // Check column
         for (let i = 0; i < this.SIZE; i++) {
             if (board[i][col] === num) return false;
         }
 
-        // 3x3 박스 확인
+        // Check 3x3 box
         const boxRow = Math.floor(row / this.BOX_SIZE) * this.BOX_SIZE;
         const boxCol = Math.floor(col / this.BOX_SIZE) * this.BOX_SIZE;
 
@@ -88,7 +88,7 @@ class SudokuGenerator {
         return true;
     }
 
-    // 배열 섞기 (Fisher-Yates 알고리즘)
+    // Shuffle array (Fisher-Yates algorithm)
     shuffleArray(array) {
         const result = [...array];
         for (let i = result.length - 1; i > 0; i--) {
@@ -98,7 +98,7 @@ class SudokuGenerator {
         return result;
     }
 
-    // 해결책이 몇 개인지 확인하는 함수 (최대 2개까지만 세어본다)
+    // Count solutions (up to 2 solutions)
     countSolutions(board, limit = 2) {
         const emptyCell = this.findEmptyCell(board);
         if (!emptyCell) return 1;
@@ -124,7 +124,7 @@ class SudokuGenerator {
 
         let removed = 0;
 
-        // 제거 가능한 모든 셀의 좌표를 초기화
+        // Initialize coordinates of all removable cells
         let positions = this.shuffleArray(
             Array.from({ length: this.SIZE ** 2 }, (_, i) => [Math.floor(i / this.SIZE), i % this.SIZE])
         );
@@ -134,18 +134,18 @@ class SudokuGenerator {
             const temp = board[row][col];
             board[row][col] = this.EMPTY;
 
-            // 답이 하나가 아니면 복원
+            // Restore if solution is not unique
             if (this.countSolutions(this.copyBoard(board)) !== 1) {
                 board[row][col] = temp;
             } else {
                 removed++;
-                // 성공하면 남은 셀을 다시 섞어서 최대한 랜덤성 유지
+                // Reshuffle remaining cells for maximum randomness
                 positions = this.shuffleArray(positions);
             }
         }
     }
 
-    // 해결책 가져오기
+    // Get solution
     getSolution(board) {
         const solution = this.copyBoard(board);
         this.solveSudoku(solution);

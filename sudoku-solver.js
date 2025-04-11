@@ -5,33 +5,33 @@ class SudokuSolver {
         this.BOX_SIZE = 3;
     }
 
-    // 스도쿠가 유효한지 확인
+    // Check if the Sudoku is valid
     isValidSudoku(board) {
         for (let row = 0; row < this.SIZE; row++) {
             for (let col = 0; col < this.SIZE; col++) {
                 const num = board[row][col];
                 if (num !== this.EMPTY) {
-                    // 현재 숫자를 일시적으로 제거하고 유효성 검사
+                    // Temporarily remove the current number and check validity
                     board[row][col] = this.EMPTY;
                     if (!this.isValidPlacement(board, row, col, num)) {
-                        board[row][col] = num; // 원상 복구
+                        board[row][col] = num; // Restore
                         return false;
                     }
-                    board[row][col] = num; // 원상 복구
+                    board[row][col] = num; // Restore
                 }
             }
         }
         return true;
     }
 
-    // 주어진 위치에 숫자를 놓을 수 있는지 확인
+    // Check if a number can be placed at the given position
     isValidPlacement(board, row, col, num) {
         return this.isRowValid(board, row, num) &&
             this.isColumnValid(board, col, num) &&
             this.isBoxValid(board, row, col, num);
     }
 
-    // 행이 유효한지 확인
+    // Check if the row is valid
     isRowValid(board, row, num) {
         for (let i = 0; i < this.SIZE; i++) {
             if (board[row][i] === num) return false;
@@ -39,7 +39,7 @@ class SudokuSolver {
         return true;
     }
 
-    // 열이 유효한지 확인
+    // Check if the column is valid
     isColumnValid(board, col, num) {
         for (let i = 0; i < this.SIZE; i++) {
             if (board[i][col] === num) return false;
@@ -47,7 +47,7 @@ class SudokuSolver {
         return true;
     }
 
-    // 3x3 박스가 유효한지 확인
+    // Check if the 3x3 box is valid
     isBoxValid(board, row, col, num) {
         const startRow = Math.floor(row / this.BOX_SIZE) * this.BOX_SIZE;
         const startCol = Math.floor(col / this.BOX_SIZE) * this.BOX_SIZE;
@@ -60,10 +60,10 @@ class SudokuSolver {
         return true;
     }
 
-    // 주어진 위치에 올 수 있는 가능한 숫자 목록 반환
+    // Return a list of possible numbers for the given position
     getPossibleNumbers(board, row, col) {
         if (board[row][col] !== this.EMPTY) {
-            return []; // 이미 숫자가 있는 경우
+            return []; // If the cell already has a number
         }
 
         const possibilities = [];
@@ -75,30 +75,30 @@ class SudokuSolver {
         return possibilities;
     }
 
-    // 특정 위치에 특정 숫자가 올 수 있는지 확인
+    // Check if a specific number can be placed at a specific position
     isCellValid(board, row, col, num) {
         return this.isValidPlacement(board, row, col, num);
     }
 
-    // 주어진 위치와 같은 박스, 행, 열에 있는 셀 반환
+    // Return cells in the same box, row, and column
     getRelatedCells(row, col) {
         const relatedCells = new Set();
 
-        // 같은 행의 셀
+        // Cells in the same row
         for (let i = 0; i < this.SIZE; i++) {
             if (i !== col) {
                 relatedCells.add(`${row},${i}`);
             }
         }
 
-        // 같은 열의 셀
+        // Cells in the same column
         for (let i = 0; i < this.SIZE; i++) {
             if (i !== row) {
                 relatedCells.add(`${i},${col}`);
             }
         }
 
-        // 같은 3x3 박스의 셀
+        // Cells in the same 3x3 box
         const startRow = Math.floor(row / this.BOX_SIZE) * this.BOX_SIZE;
         const startCol = Math.floor(col / this.BOX_SIZE) * this.BOX_SIZE;
 

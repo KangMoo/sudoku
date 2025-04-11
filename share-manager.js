@@ -1,6 +1,6 @@
 class ShareManager {
     constructor() {
-        // Base64 문자열에서 안전하지 않은 문자 변환을 위한 맵
+        // Map for converting unsafe characters in Base64 string
         this.base64UrlMap = {
             '+': '-',
             '/': '_',
@@ -8,46 +8,46 @@ class ShareManager {
         };
     }
 
-    // 게임 상태를 URL로 인코딩
+    // Encode game state as URL
     encodeGameState(gameState) {
         try {
-            // 게임 상태를 JSON 문자열로 변환
+            // Convert game state to JSON string
             const jsonString = JSON.stringify(gameState);
             
-            // JSON 문자열을 Base64로 인코딩
+            // Encode JSON string to Base64
             let base64String = btoa(unescape(encodeURIComponent(jsonString)));
             
-            // URL 안전한 문자로 변환
+            // Convert to URL-safe characters
             base64String = base64String.replace(/[+/=]/g, (match) => this.base64UrlMap[match]);
             
             return base64String;
         } catch (error) {
-            console.error('게임 상태 인코딩 실패:', error);
+            console.error('Failed to encode game state:', error);
             return null;
         }
     }
 
-    // URL에서 게임 상태 디코딩
+    // Decode game state from URL
     decodeGameState(encodedString) {
         if (!encodedString) return null;
         
         try {
-            // URL 안전 문자를 원래 Base64 문자로 변환
+            // Convert URL-safe characters back to original Base64 characters
             for (const [key, value] of Object.entries(this.base64UrlMap)) {
                 const regex = new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
                 encodedString = encodedString.replace(regex, key);
             }
             
-            // Base64 디코딩 후 JSON 파싱
+            // Decode Base64 and parse JSON
             const jsonString = decodeURIComponent(escape(atob(encodedString)));
             return JSON.parse(jsonString);
         } catch (error) {
-            console.error('게임 상태 디코딩 실패:', error);
+            console.error('Failed to decode game state:', error);
             return null;
         }
     }
 
-    // 현재 URL의 해시에서 게임 상태 추출
+    // Extract game state from current URL hash
     getStateFromUrl() {
         const hash = window.location.hash.slice(1);
         if (!hash) return null;
@@ -55,18 +55,18 @@ class ShareManager {
         return this.decodeGameState(hash);
     }
 
-    // 게임 상태를 URL 해시에 저장
+    // Save game state to URL hash
     saveStateToUrl(gameState) {
         const encodedState = this.encodeGameState(gameState);
         if (encodedState) {
-            // replaceState를 사용하여 방문 기록에 새 항목 추가 없이 URL 업데이트
+            // Use replaceState to update URL without adding a new entry to browser history
             window.history.replaceState(null, null, `#${encodedState}`);
             return true;
         }
         return false;
     }
 
-    // URL에서 게임 상태 제거
+    // Remove game state from URL
     clearStateFromUrl() {
         window.history.replaceState(null, null, window.location.pathname);
         return true;

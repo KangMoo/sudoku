@@ -1,19 +1,19 @@
-# 스도쿠 게임
+# Sudoku Game
 
-## 소개
+## Introduction
 
-쉽게 즐길 수 있는 웹 기반 스도쿠 게임
+An easy-to-play web-based Sudoku game
 
-![스도쿠 게임 이미지](./assets/image.png)
+![Sudoku game image](./assets/image.png)
 
 **[Play Now!](https://kangmoo.github.io/sudoku/)**
 
-## 키보드 단축키
+## Keyboard Shortcuts
 
-- 숫자 키(1-9): 숫자 입력
-- 방향키: 셀 이동
-- `H`: 힌트 사용
-- `M`: 메모 모드 전환
-- `Delete/Backspace`: 입력 삭제
+- Number keys (1-9): Enter numbers
+- Arrow keys: Move between cells
+- `H`: Use hint
+- `M`: Toggle note mode
+- `Delete/Backspace`: Delete input
 
 **Have Fun!!**

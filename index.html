@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>스도쿠 게임</title>
+    <title>Sudoku Game</title>
 
     <!-- Favicon 설정 -->
     <link rel="icon" href="favicon/favicon.ico" />
@@ -37,27 +37,28 @@
   </head>
   <body>
     <div class="container">
-      <h2>스도쿠</h2>
+      <!-- <h2>Sudoku</h2> -->
 
       <div id="start-screen" class="screen active">
-        <h2>난이도 선택</h2>
+        <h2>Sudoku</h2>
+        <h2>Select Difficulty</h2>
         <div class="difficulty-buttons">
-          <button id="easy">쉬움</button>
-          <button id="medium">보통</button>
-          <button id="hard">어려움</button>
-          <button id="expert">어려움+</button>
+          <button id="easy">Easy</button>
+          <button id="medium">Medium</button>
+          <button id="hard">Hard</button>
+          <button id="expert">Expert</button>
         </div>
       </div>
 
       <div id="game-screen" class="screen">
         <div class="game-info">
           <div class="game-info-row">
-            <button id="back-button">← 뒤로가기</button>
-            <div id="difficulty-display">난이도: 쉬움</div>
+            <button id="back-button">← Back</button>
+            <div id="difficulty-display">Difficulty: Easy</div>
           </div>
           <div class="game-info-row">
-            <div id="mistakes">실수: 0</div>
-            <div id="hints-used">사용한 힌트: 0</div>
+            <div id="mistakes">Mistakes: 0</div>
+            <div id="hints-used">Hints used: 0</div>
             <div id="timer">00:00</div>
           </div>
         </div>
@@ -67,22 +68,22 @@
         <div class="controls">
           <div class="number-buttons"></div>
           <div class="action-buttons">
-            <button id="hint-button">힌트</button>
-            <button id="memo-button">메모</button>
-            <button id="delete-button">지우기</button>
+            <button id="hint-button">Hint</button>
+            <button id="memo-button">Note</button>
+            <button id="delete-button">Delete</button>
           </div>
         </div>
       </div>
 
       <div id="victory-screen" class="screen">
-        <h2>게임 클리어!</h2>
+        <h2>Game Completed!</h2>
         <div class="results">
-          <p id="final-difficulty">난이도: <span>쉬움</span></p>
-          <p id="final-time">걸린 시간: <span>00:00</span></p>
-          <p id="final-mistakes">틀린 횟수: <span>0</span></p>
-          <p id="final-hints">힌트 사용: <span>0</span></p>
+          <p id="final-difficulty">Difficulty: <span>Easy</span></p>
+          <p id="final-time">Time: <span>00:00</span></p>
+          <p id="final-mistakes">Mistakes: <span>0</span></p>
+          <p id="final-hints">Hints used: <span>0</span></p>
         </div>
-        <button id="play-again">다시 하기</button>
+        <button id="play-again">Play Again</button>
       </div>
     </div>
 
