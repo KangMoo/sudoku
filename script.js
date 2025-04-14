@@ -543,15 +543,6 @@ document.addEventListener('DOMContentLoaded', () => {
         isMemoMode = !isMemoMode;
         elements.memoButton.classList.toggle('active', isMemoMode);
 
-        if (isMemoMode) {
-            // Maintain selection state and highlighting when activating memo mode
-            refreshHighlights();
-        } else {
-            // Remove selection state and highlighting when deactivating memo mode
-            clearHighlights();
-            selectedCell = null;
-        }
-        
         // Update URL state
         updateUrlWithGameState();    
     }
