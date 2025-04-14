@@ -544,7 +544,7 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.memoButton.classList.toggle('active', isMemoMode);
 
         // Update URL state
-        updateUrlWithGameState();    
+        updateUrlWithGameState();
     }
 
     // Add/remove number in memo
@@ -652,7 +652,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Remove the entered number from memos in related cells
         removeRelatedMemos(row, col, correctNumber);
-        
+
         // Update number counters
         updateNumberCounters();
 
@@ -668,7 +668,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Explicitly maintain selection state
         selectedCell = { row, col };
-        
+
         // Update URL state
         updateUrlWithGameState();
     }
@@ -683,12 +683,15 @@ document.addEventListener('DOMContentLoaded', () => {
         // If selected cell is an initial value
         if (cell.classList.contains('given')) return;
 
+        let stateChanged = false;
+
         // If a number is entered (including wrong answers)
         if (sudoku.puzzle[row][col] !== 0) {
             // Change to allow deletion of wrong answers
             sudoku.puzzle[row][col] = 0;
             cell.textContent = '';
             cell.classList.remove('wrong-number');
+            stateChanged = true;
 
             // Add memo container if it doesn't exist
             if (!cell.querySelector('.memo-container')) {
@@ -729,9 +732,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
 
+                delete memos[key];
+                stateChanged = true;
+
                 // Delete memos after animation completes
                 Promise.all(animationPromises).then(() => {
-                    delete memos[key];
                     // Call updateMemos to update DOM
                     updateMemos();
 
@@ -741,6 +746,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 // Delete immediately if DOM element doesn't exist
                 delete memos[key];
+                stateChanged = true;
             }
         }
 
@@ -937,7 +943,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         let { row, col } = selectedCell;
-        
+
         switch (arrowKey) {
             case 'ArrowUp':
                 row = Math.max(0, row - 1);
